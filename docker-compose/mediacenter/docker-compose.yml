@@ -1,18 +1,21 @@
----
-version: '2.4'
 services:
   gluetun:
     image: qmcgaw/gluetun
     container_name: gluetun
     environment:
-      - PUID=998
-      - PGID=100
-      - VPNSP=private internet access
-      - REGION=US Houston
-      - OPENVPN_USER=USERNAME #Change to YOUR Username
-      - OPENVPN_PASSWORD=PASSWORD #Change to YOUR Password
+      - FREE_ONLY=on
+      - SERVER_COUNTRIES=
+      - TZ=
+      - UPDATER_PERIOD=
+      - VPN_SERVICE_PROVIDER=
+      - VPN_TYPE=
+      #- STREAM_ONLY=on
+      - WIREGUARD_PRIVATE_KEY=
+      - DOT=off
     volumes:
-      - /srv/dev-disk-by-uuid-0d4a201c-b292-412d-ade6-cc5561e54f1f/Configs/Gluetun/Config:/gluetun
+      - /opt/docker/gluetun:/gluetun
+    devices:
+      - /dev/net/tun:/dev/net/tun
     ports:
       - 9080:9080 #QBitTorrent Web-UI
       - 6881:6881 #QBitTorrent
@@ -20,71 +23,78 @@ services:
       - 9117:9117 #Jackett
       - 7878:7878 #Radarr
       - 8989:8989 #Sonarr
+      - 8080:8080 #sabnzbd
+      - 8090:8090 #sabnzbd-https
+      - 9696:9696 #prowlarr
     cap_add:
       - NET_ADMIN
     restart: unless-stopped
-
   qbittorrent:
-    image: ghcr.io/linuxserver/qbittorrent
+    image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
-    network_mode: "service:gluetun"
+    depends_on: 
+      - gluetun
     environment:
-      - PUID=998
-      - PGID=100
-      - TZ=America/Denver
-      - UMASK=022
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
       - WEBUI_PORT=9080
+      - TORRENTING_PORT=6881
     volumes:
-      - /srv/dev-disk-by-uuid-0d4a201c-b292-412d-ade6-cc5561e54f1f/Configs/qbittorrent/config:/config
-      - /srv/dev-disk-by-uuid-0d4a201c-b292-412d-ade6-cc5561e54f1f/Torrents:/downloads
-    depends_on:
+      - /opt/docker/Configs/qbittorrent/config:/config
+      - /<path_to_data>/data:/data
+    restart: unless-stopped  
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    depends_on: 
       - gluetun
-    restart: unless-stopped
-
-  jackett:
-    image: ghcr.io/linuxserver/jackett
-    container_name: jackett
-    network_mode: "service:gluetun"
     environment:
-      - PUID=998
-      - PGID=100
-      - TZ=America/Denver
-      - AUTO_UPDATE=true #optional
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
     volumes:
-      - /srv/dev-disk-by-uuid-0d4a201c-b292-412d-ade6-cc5561e54f1f/Configs/Jackett/Config:/config
-      - /srv/dev-disk-by-uuid-0d4a201c-b292-412d-ade6-cc5561e54f1f/Torrents:/downloads
-    depends_on:
-      - gluetun
+      - /opt/docker/Configs/sabnzbd/config:/config
+      - /<path_to_data>/data:/data
     restart: unless-stopped
-  
   radarr:
     image: ghcr.io/linuxserver/radarr
     container_name: radarr
-    network_mode: "service:gluetun"
+    depends_on: 
+      - gluetun
+    network_mode: container:gluetun
     environment:
       - PUID=998
       - PGID=100
       - TZ=America/Denver
     volumes:
-      - /srv/dev-disk-by-uuid-0d4a201c-b292-412d-ade6-cc5561e54f1f/Configs/Radarr/config:/config
-      - /srv/dev-disk-by-uuid-0d4a201c-b292-412d-ade6-cc5561e54f1f/Movies:/movies
-      - /srv/dev-disk-by-uuid-0d4a201c-b292-412d-ade6-cc5561e54f1f/Torrents:/downloads
-    depends_on:
-      - gluetun
+      - /opt/docker/Configs/Radarr/config:/config
+      - /<path_to_data>/data:/data
     restart: unless-stopped
-
   sonarr:
     image: ghcr.io/linuxserver/sonarr
     container_name: sonarr
-    network_mode: "service:gluetun"
+    depends_on: 
+      - gluetun
+    network_mode: container:gluetun
     environment:
       - PUID=998
       - PGID=100
       - TZ=America/Denver
     volumes:
-      - /srv/dev-disk-by-uuid-0d4a201c-b292-412d-ade6-cc5561e54f1f/Configs/Sonarr/config:/config
-      - /srv/dev-disk-by-uuid-0d4a201c-b292-412d-ade6-cc5561e54f1f/TV:/tv
-      - /srv/dev-disk-by-uuid-0d4a201c-b292-412d-ade6-cc5561e54f1f/Torrents:/downloads
-    depends_on:
+      - /opt/docker/Configs/Sonarr/config:/config
+      - /<path_to_data>/data:/data
+    restart: unless-stopped
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    depends_on: 
       - gluetun
+    network_mode: container:gluetun
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /opt/docker/Configs/Prowlarr/config:/config
     restart: unless-stopped
