@@ -1,0 +1,114 @@
+services:
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    environment:
+      - FREE_ONLY=on
+      - DOT=off
+      - SERVER_COUNTRIES=${SERVER_COUNTRIES}
+      - TZ=${TZ}
+      - UPDATER_PERIOD=${UPDATER_PERIOD}
+      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
+      - VPN_TYPE=${VPN_TYPE}
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+
+    volumes:
+      - ${DOCKER_CONFIG_PATH}/gluetun/config:/gluetun
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - ${QBIT_WEBUI}:${QBIT_WEBUI} #QBitTorrent Web-UI
+      - ${QBIT_TCP}:${QBIT_TCP} #QBitTorrent
+      - ${QBIT_UDP}:${QBIT_UDP} #QBitTorrent
+      - ${RADARR_PORT}:${RADARR_PORT} #Radarr
+      - ${SONARR_PORT}:${SONARR_PORT} #Sonarr
+      - ${SNZBD_PORT}:${SNZBD_PORT} #sabnzbd
+      - ${PROWLARR_PORT}:${PROWLARR_PORT} #prowlarr
+      - ${FSOLVER_PORT}:${FSOLVER_PORT} #flaresolver
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    network_mode: container:gluetun
+    depends_on: 
+      - gluetun
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - WEBUI_PORT=${QBIT_WEBUI}
+      - TORRENTING_PORT=${QBIT_TCP}
+      - DOCKER_MODS=${DOCKER_MODS}
+    volumes:
+      - ${DOCKER_CONFIG_PATH}/qbittorrent/config:/config
+      - ${HOST_PATH}/data/torrents:/data/torrents
+    restart: unless-stopped  
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    network_mode: container:gluetun
+    depends_on: 
+      - gluetun
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - ${DOCKER_CONFIG_PATH}/sabnzbd/config:/config
+      - ${HOST_PATH}/data/usenet:/data/usenet
+    restart: unless-stopped
+  radarr:
+    image: ghcr.io/linuxserver/radarr
+    container_name: radarr
+    depends_on: 
+      - gluetun
+    network_mode: container:gluetun
+    environment:
+      - PUID=998
+      - PGID=100
+      - TZ=Etc/UTC
+    volumes:
+      - ${DOCKER_CONFIG_PATH}/Radarr/config:/config
+      - ${HOST_PATH}/data:/data
+    restart: unless-stopped
+  sonarr:
+    image: ghcr.io/linuxserver/sonarr
+    container_name: sonarr
+    depends_on: 
+      - gluetun
+    network_mode: container:gluetun
+    environment:
+      - PUID=998
+      - PGID=100
+      - TZ=Etc/UTC
+    volumes:
+      - ${DOCKER_CONFIG_PATH}/Sonarr/config:/config
+      - ${HOST_PATH}/data:/data
+    restart: unless-stopped
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    depends_on: 
+      - gluetun
+    network_mode: container:gluetun
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - ${DOCKER_CONFIG_PATH}/Prowlarr/config:/config
+    restart: unless-stopped
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    depends_on: 
+      - gluetun
+    network_mode: container:gluetun
+    environment:
+      - LOG_LEVEL=info
+      - LOG_HTML=false
+      - CAPTCHA_SOLVER=none
+      - TZ=Etc/UTC
+    restart: unless-stopped
