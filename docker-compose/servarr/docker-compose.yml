@@ -27,7 +27,7 @@ services:
       - FREE_ONLY=on
       - DOT=off
       - SERVER_COUNTRIES=${SERVER_COUNTRIES}
-      - TZ=${TZ}
+      - TZ=Etc/UTC
       - UPDATER_PERIOD=${UPDATER_PERIOD}
       - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
       - VPN_TYPE=${VPN_TYPE}
@@ -46,7 +46,7 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=America/Los_Angeles
+      - TZ=Etc/UTC
       - WEBUI_PORT=9080
       - TORRENTING_PORT=6881
     volumes:
@@ -55,6 +55,7 @@ services:
     network_mode: service:gluetun
     depends_on: 
       - gluetun
+
   sabnzbd:
     image: lscr.io/linuxserver/sabnzbd:latest
     container_name: sabnzbd
@@ -69,18 +70,20 @@ services:
     network_mode: service:gluetun
     depends_on: 
       - gluetun
+
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=America/Los_Angeles
+      - TZ=Etc/UTC
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - /docker/prowlarr:/config
+      - ${DOCKER_CONFIG_PATH}/prowlarr/config:/config
     restart: unless-stopped
     network_mode: service:gluetun
+
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
     container_name: sonarr
@@ -88,13 +91,14 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=America/Los_Angeles
+      - TZ=Etc/UTC
     volumes:
-      - ${DOCKER_CONFIG_PATH}/Sonarr/config:/config
+      - ${DOCKER_CONFIG_PATH}/sonarr/config:/config
       - ${HOST_PATH}/data:/data
     network_mode: service:gluetun
     depends_on: 
       - gluetun
+
   radarr:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
@@ -102,13 +106,14 @@ services:
     environment:
       - PUID=1000
       - PGID=100
-      - TZ=America/Los_Angeles
+      - TZ=Etc/UTC
     volumes:
-      - ${DOCKER_CONFIG_PATH}/Sonarr/config:/config
+      - ${DOCKER_CONFIG_PATH}/radarr/config:/config
       - ${HOST_PATH}/data:/data
     network_mode: service:gluetun
     depends_on: 
       - gluetun
+      
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
     container_name: bazarr
@@ -116,10 +121,39 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=America/Los_Angeles
+      - TZ=Etc/UTC
     volumes:
-      - ${DOCKER_CONFIG_PATH}/Sonarr/config:/config
+      - ${DOCKER_CONFIG_PATH}/bazarr/config:/config
       - ${HOST_PATH}/data:/data
     network_mode: service:gluetun
     depends_on: 
       - gluetun
+
+  jellyfin:
+    container_name: jellyfin
+    image: jellyfin/jellyfin
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - ${DOCKER_CONFIG_PATH}/jellyfin/config:/config
+      - ${HOST_PATH}/data:/data
+    ports:
+      - 8096:8096
+    devices:
+     - /dev/dri:/dev/dri # QuickSync
+    restart: unless-stopped
+
+  jellyseerr:
+    container_name: jellyseerr
+    image: fallenbagel/jellyseerr:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - ${DOCKER_CONFIG_PATH}/jellyseerr/config:/app/config
+    ports:
+      - 5055:5055
+    restart: unless-stopped
