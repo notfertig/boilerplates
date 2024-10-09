@@ -18,8 +18,8 @@ services:
       - /dev/net/tun:/dev/net/tun
     ports:
       - ${QBIT_WEBUI}:${QBIT_WEBUI} #QBitTorrent Web-UI
-      - ${QBIT_TCP}:${QBIT_TCP} #QBitTorrent
-      - ${QBIT_UDP}:${QBIT_UDP} #QBitTorrent
+      - ${QBIT_TCP_UDP}:${QBIT_TCP_UDP} #QBitTorrent
+      - ${QBIT_TCP_UDP}:${QBIT_TCP_UDP}/udp #QBitTorrent
       - ${RADARR_PORT}:${RADARR_PORT} #Radarr
       - ${SONARR_PORT}:${SONARR_PORT} #Sonarr
       - ${SNZBD_PORT}:${SNZBD_PORT} #sabnzbd
