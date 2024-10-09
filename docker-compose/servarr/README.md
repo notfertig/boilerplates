@@ -17,7 +17,7 @@ data
 ```
 Easy command to create the download directory scheme.
 ```
-mkdir -p /data/torrents/{tv,movies} && mkdir -p /data/usenet/{complete,incomplete} && mkdir -p /data/usenet/complete/{tv,movies}
+/data/{torrents/{movies,tv},media/{movies,tv},usenet/{complete/{movies,tv},incomplete}}
 ```
 
 ## VPN Information
