@@ -3,9 +3,9 @@ services:
   timemachine:
     network_mode: host
     environment:
-      - TM_USERNAME=timemachine
+      - TM_USERNAME=${TM_USERNAME}
       - TM_GROUPNAME=timemachine
-      - PASSWORD=timemachine
+      - PASSWORD=${PASSWORD}
       - TM_UID=1000
       - TM_GID=1000
       - SET_PERMISSIONS=false
@@ -17,7 +17,7 @@ services:
       - 139:139
       - 445:445
     volumes:
-      - /your_Path:/opt/timemachine
+      - ${PATH}:/opt/timemachine
     tmpfs:
       - /run/samba
     ulimits:
