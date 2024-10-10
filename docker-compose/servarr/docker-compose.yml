@@ -128,7 +128,19 @@ services:
     network_mode: service:gluetun
     depends_on: 
       - gluetun
-
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    network_mode: service:gluetun
+    environment:
+      - LOG_LEVEL=info
+      - LOG_HTML=false
+      - CAPTCHA_SOLVER=none
+      - TZ=Etc/UTC
+    depends_on: 
+      - gluetun
+    restart: unless-stopped
+    
   jellyfin:
     container_name: jellyfin
     image: jellyfin/jellyfin
